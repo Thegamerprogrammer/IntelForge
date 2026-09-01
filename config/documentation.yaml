@@ -1,0 +1,56 @@
+sources:
+  - id: SEARXNG
+    documentation_url: https://docs.searxng.org/dev/search_api.html
+    source_url: https://docs.searxng.org/
+    access_mode: JSON search API
+    capabilities: [web_discovery]
+  - id: CRAWL4AI
+    documentation_url: https://docs.crawl4ai.com/
+    source_url: https://docs.crawl4ai.com/
+    access_mode: Python adapter
+    capabilities: [document_retrieval, content_extraction]
+  - id: OLLAMA
+    documentation_url: https://docs.ollama.com/
+    source_url: https://ollama.com/
+    access_mode: local HTTP API
+    capabilities: [context_analysis, clustering]
+  - id: GEMINI
+    documentation_url: https://ai.google.dev/gemini-api/docs
+    source_url: https://ai.google.dev/gemini-api/docs/models
+    access_mode: Gemini API
+    capabilities: [structured_generation, synthesis]
+  - id: UN_DIGITAL_LIBRARY
+    documentation_url: https://digitallibrary.un.org/
+    source_url: https://digitallibrary.un.org/
+    access_mode: official searchable website
+    capabilities: [documents, resolutions, statements]
+  - id: UN_TREATY_COLLECTION
+    documentation_url: https://treaties.un.org/
+    source_url: https://treaties.un.org/
+    access_mode: official searchable website
+    capabilities: [treaty_text, ratification, entry_into_force]
+  - id: ICJ
+    documentation_url: https://www.icj-cij.org/home
+    source_url: https://www.icj-cij.org/cases
+    access_mode: official searchable website
+    capabilities: [judgments, orders, cases]
+  - id: SIPRI
+    documentation_url: https://www.sipri.org/databases
+    source_url: https://www.sipri.org/databases/armstransfers
+    access_mode: official downloadable dataset
+    capabilities: [arms_transfers]
+  - id: WEBHUIS_OLLAMA_WEBSEARCH
+    documentation_url: https://github.com/Webhuis/ollama-websearch
+    source_url: https://github.com/Webhuis/ollama-websearch
+    access_mode: reference implementation
+    capabilities: [ollama_searxng_architecture]
+  - id: WEBHUIS_OLLAMA_WEBSEARCH_OPTIMISED
+    documentation_url: https://github.com/Webhuis/ollama-websearchoptimised
+    source_url: https://github.com/Webhuis/ollama-websearchoptimised
+    access_mode: reference implementation
+    capabilities: [ollama_searxng_architecture]
+  - id: OLLAMA_SEARXNG_GUIDE
+    documentation_url: https://medium.com/@always_curi0us/how-did-i-setup-ollama-with-searxng-ea713f94f179
+    source_url: https://medium.com/@always_curi0us/how-did-i-setup-ollama-with-searxng-ea713f94f179
+    access_mode: implementation reference
+    capabilities: [ollama_searxng_architecture]
