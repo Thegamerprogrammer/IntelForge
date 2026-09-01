@@ -28,6 +28,11 @@ class DynamicResearchPlanner:
             ))
         return queries
 
+    def plan_from_dict(self, context: dict, settings: ResearchSettings) -> list[ResearchQuery]:
+        """Deserialize persisted context without giving the planner database knowledge."""
+        from ..core.models import MasterContextPacket
+        return self.plan(MasterContextPacket(**context), settings)
+
     @staticmethod
     def as_json(queries: list[ResearchQuery]) -> dict:
         return {"queries": [{"query": q.query, "target": q.target, "purpose": q.purpose, "sourceTypes": list(q.source_types), "priority": q.priority} for q in queries]}

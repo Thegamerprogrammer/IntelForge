@@ -42,5 +42,20 @@ class GeminiProxy:
         model = self.registry.select(requested_model)
         if not model:
             raise ProviderError("No healthy Gemini generation model is configured")
-        # Kept behind this proxy so the engine never depends on a vendor SDK.
-        raise ProviderError("Gemini generation integration requires a configured SDK runtime")
+        if not os.getenv("GEMINI_API_KEY"):
+            raise ProviderError("Gemini unavailable: GEMINI_API_KEY is not configured")
+        if requested_model and model.name != requested_model:
+            raise ProviderError("Manual Gemini mode refuses model substitution")
+        prompt = ("Construct exactly one formal MUN POI from this closed JSON evidence package. "
+                  "Do not introduce any fact, source, date, actor, legal provision, or claim not present. "
+                  "Return RESEARCH_REQUIRED if the evidence cannot support a POI.\n" + __import__("json").dumps(evidence_package))
+        def call():
+            from google import genai
+            client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+            response = client.models.generate_content(model=model.name, contents=prompt)
+            return response.text or "RESEARCH_REQUIRED"
+        try:
+            return self.rate_limits.execute(f"gemini:{model.name}", call)
+        except Exception as exc:
+            model.healthy = False
+            raise ProviderError(f"Gemini generation failed for {model.name}") from exc

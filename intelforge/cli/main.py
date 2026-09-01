@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
         item.add_argument("job_id", type=int)
     status = sub.add_parser("status", help="show a persisted job"); status.add_argument("job_id", type=int)
     sub.add_parser("init", help="initialize SQLite storage")
+    resume = sub.add_parser("resume", help="resume a blocked or failed job"); resume.add_argument("job_id", type=int)
     args = parser.parse_args(argv)
     if args.command == "committees":
         for item in CommitteeRegistry().all(): print(f"{item.id}: {item.official_name} ({', '.join(item.aliases)})")
@@ -47,19 +48,32 @@ def main(argv: list[str] | None = None) -> int:
     database = Database(args.database)
     if args.command == "init": print(f"Initialized {args.database}"); return 0
     if args.command == "status": print(database.status(args.job_id) or "Job not found"); return 0
+    if args.command == "resume":
+        job = database.status(args.job_id)
+        if not job: print("Job not found"); return 1
+        data = job["payload"]; data["freeze_date"] = date.fromisoformat(data["freeze_date"]) if data.get("freeze_date") else None; data["extra_links"] = tuple(data.get("extra_links", ())); data["target_countries"] = tuple(data.get("target_countries", ()))
+        print(ResearchPipeline(database=database).run(ResearchSettings(**data), job_id=args.job_id)); return 0
     if args.command in {"incidents", "legal", "generate", "validate", "export"}:
         job = database.status(args.job_id)
-        print(job or "Job not found")
-        return 0 if job else 1
+        if not job: print("Job not found"); return 1
+        if args.command == "generate":
+            print("Generation is gated: run research first; only validated persisted candidate evidence packages can be generated.")
+            return 2
+        kind = {"incidents": "incidents", "legal": "legal", "validate": "validation", "export": "finalized"}[args.command]
+        artifacts = database.artifacts(args.job_id, kind)
+        if args.command == "export":
+            print("\n\n".join(str(item["payload"]) for item in artifacts) or "No finalized POIs available for export.")
+        else:
+            print("\n".join(str(item["payload"]) for item in artifacts) or f"No persisted {kind} artifacts available.")
+        return 0
     settings = _settings(args)
     if args.command == "context":
         print(MandateResolver(CommitteeRegistry()).resolve(settings.committee)); return 0
     result = ResearchPipeline(database=database).run(settings)
     print("╭──────────────────────────────────────────────╮\n│ IntelForge Tactical Research Engine          │\n╰──────────────────────────────────────────────╯")
     print(f"Committee: {settings.committee}\nAgenda: {settings.agenda}\nPortfolio: {settings.portfolio}\nFreeze Date: {settings.freeze_date or 'Not specified'}\n")
-    for index, stage in enumerate(result["stages"]): print(f"[{index}/11] {stage:<28} ✓")
-    print(f"\nTargets discovered: {len(result['targets'])}\nQueries persisted: {result['queries']}\nSources persisted: {result['sources']}\nIncidents retained: {result['incidents']}\nFinal POIs: {len(result['final_pois'])}")
-    if not result["final_pois"]: print("Requested POIs were not manufactured: no verified incident/evidence/legal package is available yet.")
+    for index, state in enumerate(result["stages"]): print(f"[{index}/18] {state['stage_id']:<28} {state['status']}")
+    print(f"\nIncidents retained: {result['incidents']}\nEvidence claims: {result['evidence_claims']}\nLegal frameworks: {result['legal_frameworks']}\nFinal POIs: {len(result['final_pois'])}")
     return 0
 
 if __name__ == "__main__":
